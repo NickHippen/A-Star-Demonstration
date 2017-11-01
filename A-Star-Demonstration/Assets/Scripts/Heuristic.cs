@@ -16,7 +16,7 @@ public class Heuristic {
 
 	/** Generates an estimated cost to reach the stored goal from the given node
 	 */
-	public float estimate(NodeRecord node) {
+	public float estimate(Node node) {
 
 	}
 

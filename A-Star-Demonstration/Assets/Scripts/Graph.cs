@@ -8,8 +8,8 @@ public class Graph {
 
 	/** Returns a list of connections outgoing from "fromNode"
 	 */
-	public List<NodeConnection> GetConnections(NodeRecord fromNode) {
-		return connectionDict[fromNode.node];
+	public List<NodeConnection> GetConnections(Node fromNode) {
+		return connectionDict[fromNode.ID];
 	}
 
 }
