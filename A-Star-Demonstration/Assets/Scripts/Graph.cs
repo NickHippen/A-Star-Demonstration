@@ -96,7 +96,9 @@ public class Graph : MonoBehaviour {
 			foreach (Node n in graph) {
 				//Gizmos.color = n.Walkable ? Color.white : Color.red;
 				//Gizmos.DrawCube(n.WorldPosition, (Vector3.one * (nodeDiameter)) / 2);
-				Handles.Label(n.WorldPosition, "" + n.EstimatedTotalCost);
+				if (n.EstimatedTotalCost != 0) {
+					Handles.Label(n.WorldPosition, "" + n.EstimatedTotalCost);
+				}
 			}
 		}
 	}

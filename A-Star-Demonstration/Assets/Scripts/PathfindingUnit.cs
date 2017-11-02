@@ -77,7 +77,7 @@ public class PathfindingUnit : MonoBehaviour {
 
 					// We can use the node's old cost values to calculate its heuristic without
 					// calling the possibly expensive heuristic function
-					toNodeHeuristic = toNode.CostSoFar - toNode.CostSoFar;
+					toNodeHeuristic = toNode.Cost - toNode.CostSoFar;
 					Debug.Log("New heuristic: (from OPEN):" + toNodeHeuristic);
 				} else {
 					// We'll need to calculate the heuristic value using the function, since we
