@@ -2,9 +2,25 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Pathfinding : MonoBehaviour {
+public class PathfindingUnit : MonoBehaviour {
 
-	public List<NodeConnection> PathFindAStar(Graph graph, Node start, Node end, Heuristic heuristic) {
+	public Graph graph;
+	public Transform goal;
+
+	public bool displayGizmos;
+
+	private Path path;
+
+	void Start() {
+		Node fromNode = graph.FindNodeFromWorldPosition(transform.position);
+		Node goalaNode = graph.FindNodeFromWorldPosition(goal.position);
+		path = PathFindAStar(fromNode, goalaNode, new Heuristic(goalaNode));
+		if (path == null) {
+			Debug.LogWarning("Unable to find path");
+		}
+	}
+
+	public Path PathFindAStar(Node start, Node end, Heuristic heuristic) {
 		// Initialize the record for the start node
 		//NodeRecord startRecord = new NodeRecord();
 		//startRecord.node = start;
@@ -34,7 +50,7 @@ public class Pathfinding : MonoBehaviour {
 
 			// Loop through each connection in turn
 			foreach (NodeConnection connection in connections) {
-				// Get the cost stimate for the end node
+				// Get the cost estimate for the end node
 				Node toNode = connection.ToNode;
 				float toNodeCost = current.CostSoFar + connection.Cost;
 
@@ -50,6 +66,7 @@ public class Pathfinding : MonoBehaviour {
 					// We can use the node's old cost values to calculate its heuristic without
 					// calling the possibly expensive heuristic function
 					toNodeHeuristic = toNode.Cost - toNode.CostSoFar;
+					Debug.Log("New heuristic (from CLOSED): " + toNodeHeuristic);
 				} else if (open.Contains(toNode)) {
 					// Skip if the node is open and we've not found a better route
 
@@ -61,10 +78,11 @@ public class Pathfinding : MonoBehaviour {
 					// We can use the node's old cost values to calculate its heuristic without
 					// calling the possibly expensive heuristic function
 					toNodeHeuristic = toNode.CostSoFar - toNode.CostSoFar;
+					Debug.Log("New heuristic: (from OPEN):" + toNodeHeuristic);
 				} else {
 					// We'll need to calculate the heuristic value using the function, since we
 					// don't have an existing record to use
-					toNodeHeuristic = heuristic.estimate(toNode);
+					toNodeHeuristic = heuristic.Estimate(toNode);
 				}
 
 				// We're here if we need to update the node
@@ -74,7 +92,7 @@ public class Pathfinding : MonoBehaviour {
 				toNode.EstimatedTotalCost = toNodeCost + toNodeHeuristic;
 
 				// And add it to the open list
-				if (open.Contains(toNode)) {
+				if (!open.Contains(toNode)) {
 					open.Add(toNode);
 				}
 			}
@@ -98,7 +116,7 @@ public class Pathfinding : MonoBehaviour {
 			}
 			// Reverse the path, and return it
 			path.Reverse();
-			return path;
+			return new Path(path);
 		}
 	}
 
@@ -134,14 +152,10 @@ public class Pathfinding : MonoBehaviour {
 		return false;
 	}
 
+	void OnDrawGizmos() {
+		if (displayGizmos && path != null) {
+			path.DrawGizmos();
+		}
+	}
+
 }
-
-//public struct NodeRecord {
-
-//	public Node node;
-//	public NodeConnection connection;
-//	public float costSoFar;
-//	public float estimatedTotalCost;
-//	public float cost;
-
-//}
