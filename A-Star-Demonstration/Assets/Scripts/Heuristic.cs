@@ -16,8 +16,15 @@ public class Heuristic {
 
 	/** Generates an estimated cost to reach the stored goal from the given node
 	 */
-	public float estimate(Node node) {
+	public float estimate(Node fromNode) {
+		int distX = Mathf.Abs(fromNode.Location.x - GoalNode.Location.x);
+		int distY = Mathf.Abs(fromNode.Location.y - GoalNode.Location.y);
 
+		if (distX > distY) {
+			return 14 * distY + 10 * (distX - distY);
+		} else {
+			return 14 * distX + 10 * (distY - distX);
+		}
 	}
 
 }

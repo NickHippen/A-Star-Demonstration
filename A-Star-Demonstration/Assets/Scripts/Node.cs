@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Node {
 
-	public int ID { get; set; }
+	//public int ID { get; set; }
+	public GraphLocation Location { get; set; }
 	public bool Walkable { get; set; }
 	public NodeConnection Connection { get; set; }
 	public float CostSoFar { get; set; }
