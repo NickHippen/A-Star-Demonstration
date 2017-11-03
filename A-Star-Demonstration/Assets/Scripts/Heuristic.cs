@@ -25,11 +25,14 @@ public class Heuristic {
 		//} else {
 		//	return 14 * distX + 10 * (distY - distX);
 		//}
-		int x1 = fromNode.Location.x;
-		int y1 = fromNode.Location.y;
-		int x2 = GoalNode.Location.x;
-		int y2 = GoalNode.Location.y;
-		return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+
+		//int x1 = fromNode.Location.x;
+		//int y1 = fromNode.Location.y;
+		//int x2 = GoalNode.Location.x;
+		//int y2 = GoalNode.Location.y;
+		//return ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+
+		return Vector3.Distance(fromNode.WorldPosition, GoalNode.WorldPosition);
 	}
 
 }

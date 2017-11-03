@@ -6,10 +6,13 @@ public class PathfindingUnit : MonoBehaviour {
 
 	public Graph graph;
 	public Transform goal;
+	public bool moving;
+	public float speed = 5f;
 
 	public bool displayGizmos;
 
 	private Path path;
+	private Node movementNode;
 
 	void Start() {
 		Node fromNode = graph.FindNodeFromWorldPosition(transform.position);
@@ -17,7 +20,21 @@ public class PathfindingUnit : MonoBehaviour {
 		path = PathFindAStar(fromNode, goalaNode, new Heuristic(goalaNode));
 		if (path == null) {
 			Debug.LogWarning("Unable to find path");
+		} else {
+			StartCoroutine("FollowPath");
 		}
+	}
+
+	public IEnumerator FollowPath() {
+		foreach (NodeConnection connection in path.PathConnections) {
+			Node currentNode = graph.FindNodeFromWorldPosition(transform.position);
+			while (!currentNode.Equals(connection.ToNode)) {
+				transform.position = Vector3.MoveTowards(transform.position, connection.ToNode.WorldPosition, speed * Time.deltaTime);
+				currentNode = graph.FindNodeFromWorldPosition(transform.position);
+				yield return null;
+			}
+		}
+		Debug.Log("Finished path");
 	}
 
 	public Path PathFindAStar(Node start, Node end, Heuristic heuristic) {
@@ -50,50 +67,21 @@ public class PathfindingUnit : MonoBehaviour {
 
 			// Loop through each connection in turn
 			foreach (NodeConnection connection in connections) {
-				// Get the cost estimate for the end node
 				Node toNode = connection.ToNode;
-				float toNodeCost = current.CostSoFar + connection.Cost;
-
-				// If the node is closed we may have to skip, or remove it from the closed list.
-				float toNodeHeuristic;
 				if (closed.Contains(toNode)) {
-					// If we didn't find a shorter route, skip
-					if (toNode.CostSoFar <= toNodeCost) {
-						continue;
-					}
-					closed.Remove(toNode);
-
-					// We can use the node's old cost values to calculate its heuristic without
-					// calling the possibly expensive heuristic function
-					toNodeHeuristic = toNode.Cost - toNode.CostSoFar;
-					Debug.Log("New heuristic (from CLOSED): " + toNodeHeuristic);
-				} else if (open.Contains(toNode)) {
-					// Skip if the node is open and we've not found a better route
-
-					// If our route is no better, then skip
-					if (toNode.CostSoFar <= toNodeCost) {
-						continue;
-					}
-
-					// We can use the node's old cost values to calculate its heuristic without
-					// calling the possibly expensive heuristic function
-					toNodeHeuristic = toNode.Cost - toNode.CostSoFar;
-					Debug.Log("New heuristic: (from OPEN):" + toNodeHeuristic);
-				} else {
-					// We'll need to calculate the heuristic value using the function, since we
-					// don't have an existing record to use
-					toNodeHeuristic = heuristic.Estimate(toNode);
+					continue;
 				}
 
-				// We're here if we need to update the node
-				// Update the cost, estimate and connection
-				toNode.Cost = toNodeCost;
-				toNode.Connection = connection;
-				toNode.EstimatedTotalCost = toNodeCost + toNodeHeuristic;
+				float newMovementCost = current.CostSoFar + connection.Cost;
+				if (newMovementCost < toNode.CostSoFar || !open.Contains(toNode)) {
+					toNode.CostSoFar = newMovementCost;
+					float heuristicCost = heuristic.Estimate(toNode);
+					toNode.EstimatedTotalCost = toNode.CostSoFar + heuristicCost;
+					toNode.Connection = connection;
 
-				// And add it to the open list
-				if (!open.Contains(toNode)) {
-					open.Add(toNode);
+					if (!open.Contains(toNode)) {
+						open.Add(toNode);
+					}
 				}
 			}
 			// We've finished looking at the connections for the current node, so add it to the

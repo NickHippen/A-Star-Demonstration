@@ -353,6 +353,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   graph: {fileID: 1631517070}
   goal: {fileID: 85739485}
+  moving: 1
+  speed: 5
   displayGizmos: 1
 --- !u!1 &709379997
 GameObject:
@@ -641,7 +643,7 @@ MonoBehaviour:
     m_Bits: 256
   graphWorldSize: {x: 100, y: 100}
   nodeRadius: 0.5
-  displayGizmos: 1
+  displayGizmos: 0
 --- !u!4 &1631517071
 Transform:
   m_ObjectHideFlags: 0
