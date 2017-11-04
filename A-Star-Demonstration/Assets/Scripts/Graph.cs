@@ -25,6 +25,12 @@ public class Graph : MonoBehaviour {
 		CreateGraph();
 	}
 
+	public int MaxSize {
+		get {
+			return graphCountX * graphCountY;
+		}
+	}
+
 	/** Returns a list of connections outgoing from "fromNode"
 	 */
 	public List<NodeConnection> GetConnections(Node fromNode) {
