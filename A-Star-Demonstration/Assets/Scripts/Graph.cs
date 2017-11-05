@@ -142,7 +142,7 @@ public class Graph : MonoBehaviour {
 				if (displayOnlyChecked && n.EstimatedTotalCost <= 0) {
 					continue;
 				}
-				switch (n.ClusterID) {
+				switch (n.ClusterID % 8) {
 					case 0:
 						Gizmos.color = Color.gray;
 						break;

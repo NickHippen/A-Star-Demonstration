@@ -32,7 +32,6 @@ public class PathfindingUnit : MonoBehaviour {
 		StopCoroutine("FollowPathCoroutine");
 		Node fromNode = graph.FindNodeFromWorldPosition(transform.position);
 		Node goalNode = graph.FindNodeFromWorldPosition(goal.position);
-		ClusterHeuristic clusterH = new ClusterHeuristic(goalNode, graph);
 		EuclideanHeuristic euclideanH = new EuclideanHeuristic(goalNode);
 
 		Stopwatch timer = new Stopwatch();
@@ -60,6 +59,7 @@ public class PathfindingUnit : MonoBehaviour {
 
 		if (heapCluster) {
 			// Heap + Cluster
+			ClusterHeuristic clusterH = new ClusterHeuristic(goalNode, graph);
 			timer.Start();
 			for (int i = 0; i < repeatCount; i++) {
 				path = new PathfinderHeap(graph, true).PathFindAStar(fromNode, goalNode, clusterH);

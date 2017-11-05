@@ -319,6 +319,11 @@ MonoBehaviour:
   moving: 0
   speed: 5
   displayGizmos: 1
+  list: 0
+  heapEuclidean: 1
+  heapCluster: 0
+  nodeArray: 0
+  repeatCount: 1
 --- !u!23 &102275168
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1155,6 +1160,11 @@ MonoBehaviour:
   moving: 0
   speed: 5
   displayGizmos: 1
+  list: 0
+  heapEuclidean: 1
+  heapCluster: 0
+  nodeArray: 0
+  repeatCount: 1
 --- !u!23 &1107994800
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1283,6 +1293,11 @@ MonoBehaviour:
   moving: 0
   speed: 5
   displayGizmos: 1
+  list: 0
+  heapEuclidean: 0
+  heapCluster: 1
+  nodeArray: 0
+  repeatCount: 1
 --- !u!23 &1217580494
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1634,6 +1649,7 @@ MonoBehaviour:
   graphWorldSize: {x: 100, y: 100}
   nodeRadius: 0.5
   displayGizmos: 1
+  displayOnlyChecked: 1
 --- !u!4 &1631517071
 Transform:
   m_ObjectHideFlags: 0
