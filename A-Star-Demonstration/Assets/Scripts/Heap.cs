@@ -19,7 +19,7 @@ public class Heap<T> where T : IHeapItem<T> {
 		currentItemCount++;
 	}
 
-	public T RemoveFirst() {
+	public T Pop() {
 		T firstItem = items[0];
 		currentItemCount--;
 		items[0] = items[currentItemCount];
@@ -40,6 +40,18 @@ public class Heap<T> where T : IHeapItem<T> {
 
 	public bool Contains(T item) {
 		return Equals(items[item.HeapIndex], item);
+	}
+
+	public T Find(Predicate<T> findFunc) {
+		foreach (T item in items) {
+			if (item == null) {
+				continue;
+			}
+			if (findFunc(item)) {
+				return item;
+			}
+		}
+		return default(T);
 	}
 
 	void SortDown(T item) {

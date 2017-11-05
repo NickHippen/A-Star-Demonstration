@@ -34,7 +34,7 @@ public class NodeConnection {
 		//} else {
 		//	return 14 * distX + 10 * (distY - distX);
 		//}
-		return new Heuristic(ToNode).Estimate(FromNode);
+		return new EuclideanHeuristic(ToNode).Estimate(FromNode);
 	}
 
 	public void DrawGizmos() {

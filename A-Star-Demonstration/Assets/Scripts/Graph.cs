@@ -12,11 +12,13 @@ public class Graph : MonoBehaviour {
 	public float nodeRadius = 0.5f;
 
 	public bool displayGizmos = false;
+	public bool displayOnlyChecked = true;
 
 	private float nodeDiameter;
 	private int graphCountX;
 	private int graphCountY;
-	private Node[,] graph;
+	public Node[,] graph;
+	public Dictionary<int, Node> clusterCenters = new Dictionary<int, Node>();
 
 	void Awake() {
 		nodeDiameter = nodeRadius * 2f;
@@ -46,10 +48,47 @@ public class Graph : MonoBehaviour {
 				Vector3 worldPoint = worldBottomLeft + Vector3.right * (x * nodeDiameter + nodeRadius) + Vector3.forward * (y * nodeDiameter + nodeRadius);
 				bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius, unwalkableLayer));
 
+				//int clusterID = 0;
+				//Ray ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
+				//RaycastHit hit;
+				//if (Physics.Raycast(ray, out hit, 100)) {
+				//	ClusterID clusterIDObj = hit.transform.GetComponent<ClusterID>();
+				//	if (clusterIDObj != null) {
+				//		clusterID = clusterIDObj.ID;
+				//		clusterCenters.Add(clusterID, FindNodeFromWorldPosition(hit.transform.position));
+				//	}
+				//}
+				
 				graph[x, y] = new Node(new GraphLocation(x, y), worldPoint, walkable);
 			}
 		}
 		StoreConnections();
+		SetupClusters();
+	}
+
+	private void SetupClusters() {
+		for (int x = 0; x < graphCountX; x++) {
+			for (int y = 0; y < graphCountY; y++) {
+				Node node = graph[x, y];
+				int clusterID = 0;
+				Ray ray = new Ray(node.WorldPosition + Vector3.up * 50, Vector3.down);
+				RaycastHit hit;
+				if (Physics.Raycast(ray, out hit, 100)) {
+					ClusterID clusterIDObj = hit.transform.GetComponent<ClusterID>();
+					if (clusterIDObj != null) {
+						clusterID = clusterIDObj.ID;
+						if (!clusterCenters.ContainsKey(clusterID)) {
+							if (hit.transform.childCount > 0) {
+								clusterCenters.Add(clusterID, FindNodeFromWorldPosition(hit.transform.GetChild(0).position));
+							} else {
+								clusterCenters.Add(clusterID, FindNodeFromWorldPosition(hit.transform.position));
+							}
+						}
+					}
+				}
+				node.ClusterID = clusterID;
+			}
+		}
 	}
 
 	private void StoreConnections() {
@@ -100,8 +139,41 @@ public class Graph : MonoBehaviour {
 
 		if (graph != null && displayGizmos) {
 			foreach (Node n in graph) {
-				Gizmos.color = n.Walkable ? Color.white : Color.red;
-				Gizmos.DrawCube(n.WorldPosition, (Vector3.one * (nodeDiameter)) / 2);
+				if (displayOnlyChecked && n.EstimatedTotalCost <= 0) {
+					continue;
+				}
+				switch (n.ClusterID) {
+					case 0:
+						Gizmos.color = Color.gray;
+						break;
+					case 1:
+						Gizmos.color = Color.cyan;
+						break;
+					case 2:
+						Gizmos.color = Color.yellow;
+						break;
+					case 3:
+						Gizmos.color = Color.magenta;
+						break;
+					case 4:
+						Gizmos.color = Color.blue;
+						break;
+					case 5:
+						Gizmos.color = new Color(111, 0, 0);
+						break;
+					case 6:
+						Gizmos.color = new Color(111, 101, 0);
+						break;
+					case 7:
+						Gizmos.color = new Color(111, 101, 166);
+						break;
+				}
+				Gizmos.color = n.Walkable ? Gizmos.color : Color.red;
+				Vector3 size = (Vector3.one * (nodeDiameter)) / 2;
+				Gizmos.DrawCube(n.WorldPosition, size);
+				if (clusterCenters.ContainsValue(n)) {
+					Gizmos.DrawCube(n.WorldPosition + (Vector3.up * 2), size * 2);
+				}
 			}
 		}
 	}

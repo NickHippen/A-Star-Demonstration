@@ -13,25 +13,84 @@ public class PathfindingUnit : MonoBehaviour {
 
 	public bool displayGizmos;
 
+	public bool list = false;
+	public bool heapEuclidean = true;
+	public bool heapCluster = false;
+	public bool nodeArray = false;
+
+	public int repeatCount = 1;
+
 	private Path path;
 	private Node movementNode;
 
 	void Start() {
+		FindPath();
+		//FollowPath();
+	}
+
+	public void FindPath() {
+		StopCoroutine("FollowPathCoroutine");
 		Node fromNode = graph.FindNodeFromWorldPosition(transform.position);
-		Node goalaNode = graph.FindNodeFromWorldPosition(goal.position);
+		Node goalNode = graph.FindNodeFromWorldPosition(goal.position);
+		ClusterHeuristic clusterH = new ClusterHeuristic(goalNode, graph);
+		EuclideanHeuristic euclideanH = new EuclideanHeuristic(goalNode);
+
 		Stopwatch timer = new Stopwatch();
-		timer.Start();
-		path = PathFindAStar(fromNode, goalaNode, new Heuristic(goalaNode));
-		timer.Stop();
-		Debug.Log("Pathfinding took: " + timer.ElapsedMilliseconds + "ms");
-		if (path == null) {
-			Debug.LogWarning("Unable to find path");
-		} else {
-			StartCoroutine("FollowPath");
+		if (list) {
+			// List + Euclidean
+			timer.Start();
+			for (int i = 0; i < repeatCount; i++) {
+				path = new PathfinderList(graph).PathFindAStar(fromNode, goalNode, euclideanH);
+			}
+			timer.Stop();
+			Debug.Log("[List + Euclidean] Pathfinding took: " + timer.ElapsedMilliseconds + "ms");
+			timer.Reset();
+		}
+
+		if (heapEuclidean) {
+			// Heap + Euclidean
+			timer.Start();
+			for (int i = 0; i < repeatCount; i++) {
+				path = new PathfinderHeap(graph, true).PathFindAStar(fromNode, goalNode, euclideanH);
+			}
+			timer.Stop();
+			Debug.Log("[Heap + Euclidean] Pathfinding took: " + timer.ElapsedMilliseconds + "ms");
+			timer.Reset();
+		}
+
+		if (heapCluster) {
+			// Heap + Cluster
+			timer.Start();
+			for (int i = 0; i < repeatCount; i++) {
+				path = new PathfinderHeap(graph, true).PathFindAStar(fromNode, goalNode, clusterH);
+			}
+			timer.Stop();
+			Debug.Log("[Heap + Cluster] Pathfinding took: " + timer.ElapsedMilliseconds + "ms");
+			timer.Reset();
+		}
+
+		if (nodeArray) {
+			// Heap + Euclidean + Node Array
+			timer.Start();
+			for (int i = 0; i < repeatCount; i++) {
+				path = new PathfinderHeapNodeArray(graph).PathFindAStar(fromNode, goalNode, euclideanH);
+			}
+			timer.Stop();
+			Debug.Log("[Heap + Euclidean + Node Array] Pathfinding took: " + timer.ElapsedMilliseconds + "ms");
+			timer.Reset();
 		}
 	}
 
-	public IEnumerator FollowPath() {
+	public void FollowPath() {
+		if (path == null) {
+			Debug.LogWarning("Unable to find path");
+		} else {
+			StopCoroutine("FollowPathCoroutine");
+			StartCoroutine("FollowPathCoroutine");
+		}
+	}
+
+	private IEnumerator FollowPathCoroutine() {
 		foreach (NodeConnection connection in path.PathConnections) {
 			Node currentNode = graph.FindNodeFromWorldPosition(transform.position);
 			while (!currentNode.Equals(connection.ToNode)) {
@@ -41,181 +100,6 @@ public class PathfindingUnit : MonoBehaviour {
 			}
 		}
 		Debug.Log("Finished path");
-	}
-
-	public Path PathFindAStar(Node start, Node end, Heuristic heuristic) {
-		// Initialize the record for the start node
-		//NodeRecord startRecord = new NodeRecord();
-		//startRecord.node = start;
-		//startRecord.connection = null;
-		//startRecord.costSoFar = 0f;
-		//startRecord.estimatedTotalCost = heuristic.estimate(startRecord);
-
-		// Intiialize the open and closed lists
-		//List<Node> open = new List<Node>();
-		Heap<Node> open = new Heap<Node>(graph.MaxSize);
-		open.Add(start);
-		HashSet<Node> closed = new HashSet<Node>();
-
-		Node current = null;
-		bool pathFound = false;
-		// Iterate through processing each node
-		while (open.Count > 0) {
-			// Find the smallest element in the open list (using the estimatedTotalCost)
-			current = open.RemoveFirst();
-			closed.Add(current);
-
-			// If at the end, stop
-			if (current.Equals(end)) {
-				pathFound = true;
-				break;
-			}
-
-			List<NodeConnection> connections = graph.GetConnections(current);
-
-			// Loop through each connection in turn
-			foreach (NodeConnection connection in connections) {
-				Node toNode = connection.ToNode;
-				if (closed.Contains(toNode)) {
-					continue;
-				}
-
-				float newMovementCost = current.CostSoFar + connection.Cost;
-				if (newMovementCost < toNode.CostSoFar || !open.Contains(toNode)) {
-					toNode.CostSoFar = newMovementCost;
-					float heuristicCost = heuristic.Estimate(toNode);
-					toNode.HeuristicCost = heuristicCost;
-					toNode.EstimatedTotalCost = toNode.CostSoFar + heuristicCost;
-					toNode.Connection = connection;
-
-					if (!open.Contains(toNode)) {
-						open.Add(toNode);
-					} else {
-						open.UpdateItem(toNode);
-					}
-				}
-			}
-		}
-
-		if (!pathFound) {
-			// We've run out of nodes without finding the goal, so there's no solution
-			return null;
-		} else {
-			// Compile the list of connections in the path
-			List<NodeConnection> path = new List<NodeConnection>();
-
-			// Work back along the path, accumulating connections
-			while (!current.Equals(start)) {
-				path.Add(current.Connection);
-				current = current.Connection.FromNode;
-			}
-			// Reverse the path, and return it
-			path.Reverse();
-			return new Path(path);
-		}
-	}
-
-	//public Path PathFindAStar(Node start, Node end, Heuristic heuristic) {
-	//	// Initialize the record for the start node
-	//	//NodeRecord startRecord = new NodeRecord();
-	//	//startRecord.node = start;
-	//	//startRecord.connection = null;
-	//	//startRecord.costSoFar = 0f;
-	//	//startRecord.estimatedTotalCost = heuristic.estimate(startRecord);
-
-	//	// Intiialize the open and closed lists
-	//	List<Node> open = new List<Node>();
-	//	open.Add(start);
-	//	List<Node> closed = new List<Node>();
-
-	//	Node current = null;
-	//	bool pathFound = false;
-	//	// Iterate through processing each node
-	//	while (open.Count > 0) {
-	//		// Find the smallest element in the open list (using the estimatedTotalCost)
-	//		current = FindSmallestElement(open);
-
-	//		// If at the end, stop
-	//		if (current.Equals(end)) {
-	//			pathFound = true;
-	//			break;
-	//		}
-
-	//		List<NodeConnection> connections = graph.GetConnections(current);
-
-	//		// Loop through each connection in turn
-	//		foreach (NodeConnection connection in connections) {
-	//			Node toNode = connection.ToNode;
-	//			if (closed.Contains(toNode)) {
-	//				continue;
-	//			}
-
-	//			float newMovementCost = current.CostSoFar + connection.Cost;
-	//			if (newMovementCost < toNode.CostSoFar || !open.Contains(toNode)) {
-	//				toNode.CostSoFar = newMovementCost;
-	//				float heuristicCost = heuristic.Estimate(toNode);
-	//				toNode.EstimatedTotalCost = toNode.CostSoFar + heuristicCost;
-	//				toNode.Connection = connection;
-
-	//				if (!open.Contains(toNode)) {
-	//					open.Add(toNode);
-	//				}
-	//			}
-	//		}
-	//		// We've finished looking at the connections for the current node, so add it to the
-	//		// closed list and remove it from the open list
-	//		open.Remove(current);
-	//		closed.Add(current);
-	//	}
-
-	//	if (!pathFound) {
-	//		// We've run out of nodes without finding the goal, so there's no solution
-	//		return null;
-	//	} else {
-	//		// Compile the list of connections in the path
-	//		List<NodeConnection> path = new List<NodeConnection>();
-
-	//		// Work back along the path, accumulating connections
-	//		while (!current.Equals(start)) {
-	//			path.Add(current.Connection);
-	//			current = current.Connection.FromNode;
-	//		}
-	//		// Reverse the path, and return it
-	//		path.Reverse();
-	//		return new Path(path);
-	//	}
-	//}
-
-	private Node FindSmallestElement(List<Node> list) {
-		if (list.Count <= 0) {
-			throw new System.Exception("Cannot find smallest element in empty list");
-		}
-		Node smallest = list[0];
-		for (int i = 1; i < list.Count; i++) {
-			Node record = list[i];
-			if (record.EstimatedTotalCost < smallest.EstimatedTotalCost) {
-				smallest = record;
-			}
-		}
-		return smallest;
-	}
-
-	private NodeRecord FindRecordByNode(List<NodeRecord> list, int node) {
-		foreach (NodeRecord record in list) {
-			if (record.node.Equals(node)) {
-				return record;
-			}
-		}
-		throw new System.Exception("Cannot find record by the given node");
-	}
-
-	private bool ContainsRecordByNode(List<NodeRecord> list, int node) {
-		foreach (NodeRecord record in list) {
-			if (record.node.Equals(node)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	void OnDrawGizmos() {
