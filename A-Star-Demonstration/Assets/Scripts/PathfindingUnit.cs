@@ -22,6 +22,7 @@ public class PathfindingUnit : MonoBehaviour {
 
 	private Path path;
 	private Node movementNode;
+	private IHeuristic heuristic;
 
 	void Start() {
 		FindPath();
@@ -59,14 +60,24 @@ public class PathfindingUnit : MonoBehaviour {
 
 		if (heapCluster) {
 			// Heap + Cluster
-			ClusterHeuristic clusterH = new ClusterHeuristic(goalNode, graph);
+			ClusterHeuristic clusterH;
+			if (heuristic == null) {
+				clusterH = new ClusterHeuristic(goalNode, graph);
+			} else {
+				clusterH = (ClusterHeuristic)heuristic;
+			}
 			timer.Start();
-			for (int i = 0; i < repeatCount; i++) {
-				path = new PathfinderHeap(graph, true).PathFindAStar(fromNode, goalNode, clusterH);
+			if (clusterH.CanReach(fromNode)) {
+				for (int i = 0; i < repeatCount; i++) {
+					path = new PathfinderHeap(graph, true).PathFindAStar(fromNode, goalNode, clusterH);
+				}
+			} else {
+				path = null;
 			}
 			timer.Stop();
 			Debug.Log("[Heap + Cluster] Pathfinding took: " + timer.ElapsedMilliseconds + "ms");
 			timer.Reset();
+			heuristic = clusterH;
 		}
 
 		if (nodeArray) {
@@ -78,6 +89,9 @@ public class PathfindingUnit : MonoBehaviour {
 			timer.Stop();
 			Debug.Log("[Heap + Euclidean + Node Array] Pathfinding took: " + timer.ElapsedMilliseconds + "ms");
 			timer.Reset();
+		}
+		if (heuristic == null) {
+			heuristic = euclideanH;
 		}
 	}
 

@@ -55,14 +55,24 @@ public class ClusterHeuristic : IHeuristic {
 				Node end = graph.clusterCenters[clusterID_End];
 				Path path = pathfinder.PathFindAStar(start, end, new EuclideanHeuristic(end));
 				float pathCost = 0f;
-				foreach (NodeConnection connection in path.PathConnections) {
-					pathCost += connection.Cost;
+				if (path != null) {
+					foreach (NodeConnection connection in path.PathConnections) {
+						pathCost += connection.Cost;
+					}
+				} else {
+					Debug.Log("Can't reach cluster " + clusterID_End + " from " + clusterID_Start);
+					pathCost = -1f;
 				}
 				if (clusterID_Start > 0 && clusterID_End > 0) {
 					this.clusterMap[clusterID_Start - 1, clusterID_End - 1] = pathCost;
 				}
 			}
 		}
+	}
+
+	public bool CanReach(Node fromNode) {
+		Debug.Log(fromNode.ClusterID + ", " + GoalNode.ClusterID);
+		return this.clusterMap[fromNode.ClusterID-1, GoalNode.ClusterID-1] != -1f;
 	}
 
 	public void PrintClusterMap() {

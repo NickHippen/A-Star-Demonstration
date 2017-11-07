@@ -521,9 +521,9 @@ MonoBehaviour:
   moving: 0
   speed: 5
   displayGizmos: 1
-  list: 0
+  list: 1
   heapEuclidean: 0
-  heapCluster: 1
+  heapCluster: 0
   nodeArray: 0
   repeatCount: 1
 --- !u!23 &1217580494

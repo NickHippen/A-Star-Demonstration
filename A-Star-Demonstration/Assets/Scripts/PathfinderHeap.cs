@@ -79,7 +79,6 @@ public class PathfinderHeap : IPathfinder {
 			}
 			// Reverse the path, and return it
 			path.Reverse();
-			Debug.Log("Done");
 			Cleanup(cleanup);
 			return new Path(path);
 		}
